@@ -1,7 +1,5 @@
-#include <iostream>
-#include <fstream>
 #include <string>
-#include<unistd.h>
+#include <unistd.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -19,18 +17,16 @@ void drawGraphics();
 void readInputs();
 
 chip8 myChip8;
-GLubyte* pixels = new GLubyte[CHIP_8_SCREEN_HEIGHT*CHIP_8_SCREEN_WIDTH*3];
+GLubyte *pixels = new GLubyte[CHIP_8_SCREEN_HEIGHT * CHIP_8_SCREEN_WIDTH * 3];
 
 GLuint shaderProgram;
 GLFWwindow *window;
 GLuint VAO, VBO, EBO;
 GLuint texture;
 
-int main(int argc, char **argv)
-{
-    if(argc < 2)
-    {
-        printf("Usage: myChip8.exe chip8application\n\n");
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        printf("Usage: PROGRAM chip8application\n\n");
         return 1;
     }
 
@@ -59,21 +55,9 @@ int main(int argc, char **argv)
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    delete pixels;
+    delete[] pixels;
 
     return 0;
-}
-
-std::string readShaderFile(char *path) {
-    std::ifstream file(path);
-    if (!file.is_open()) {
-        std::cerr << "Could not open shader file \"" << path << "\"" << std::endl;
-        return "";
-    }
-    std::string ret = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::cout << "shader file \"" << path << "\"" << " loaded !" << std::endl;
-
-    return ret;
 }
 
 void setupGraphics() {
@@ -104,10 +88,32 @@ void setupGraphics() {
     // Load shader
     shaderProgram = glCreateProgram();
     {
-        std::string vertexShaderSCodeString = readShaderFile(
-                "/media/chokearth/Chokearth/Projets/CHIP-8/src/shaders/basic.vert");
-        std::string fragmentShaderSCodeString = readShaderFile(
-                "/media/chokearth/Chokearth/Projets/CHIP-8/src/shaders/basic.frag");
+        std::string vertexShaderSCodeString = "#version 330 core\n"
+                                              "\n"
+                                              "layout (location = 0) in vec2 aPos;\n"
+                                              "layout (location = 1) in vec3 aColor;\n"
+                                              "layout (location = 2) in vec2 aTex;\n"
+                                              "\n"
+                                              "out vec3 color;\n"
+                                              "out vec2 texCoord;\n"
+                                              "\n"
+                                              "void main() {\n"
+                                              "    gl_Position = vec4(aPos, .0f, 1.0f);\n"
+                                              "    color = aColor;\n"
+                                              "    texCoord = aTex;\n"
+                                              "}";
+        std::string fragmentShaderSCodeString = "#version 330 core\n"
+                                                "\n"
+                                                "out vec4 FragColor;\n"
+                                                "\n"
+                                                "in vec3 color;\n"
+                                                "in vec2 texCoord;\n"
+                                                "\n"
+                                                "uniform sampler2D tex0;\n"
+                                                "\n"
+                                                "void main() {\n"
+                                                "    FragColor = texture(tex0, texCoord);\n"
+                                                "}";
 
         const char *vertexShaderSCodeCharA = vertexShaderSCodeString.c_str();
         const char *fragmentShaderSCodeCharA = fragmentShaderSCodeString.c_str();
@@ -185,7 +191,8 @@ void setupGraphics() {
     // Clear screen
     memset(pixels, 0, CHIP_8_SCREEN_WIDTH * CHIP_8_SCREEN_HEIGHT * 3 * sizeof(char));
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CHIP_8_SCREEN_WIDTH, CHIP_8_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid *) pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CHIP_8_SCREEN_WIDTH, CHIP_8_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE,
+                 (GLvoid *) pixels);
     GLuint texUni = glGetUniformLocation(shaderProgram, "tex0");
     glUseProgram(shaderProgram);
     glUniform1i(texUni, 0);
@@ -195,13 +202,15 @@ void drawGraphics() {
     // Update pixels
     for (int y = 0; y < CHIP_8_SCREEN_HEIGHT; ++y) {
         for (int x = 0; x < CHIP_8_SCREEN_WIDTH; ++x) {
-            pixels[y*CHIP_8_SCREEN_WIDTH*3 + x*3 + 0] = pixels[y*CHIP_8_SCREEN_WIDTH*3 + x*3 + 1] = pixels[y*CHIP_8_SCREEN_WIDTH*3 + x*3 + 2] = myChip8.gfx[y*CHIP_8_SCREEN_WIDTH + x] * 255;
+            pixels[y * CHIP_8_SCREEN_WIDTH * 3 + x * 3 + 0] = pixels[y * CHIP_8_SCREEN_WIDTH * 3 + x * 3 + 1] = pixels[
+                    y * CHIP_8_SCREEN_WIDTH * 3 + x * 3 + 2] = myChip8.gfx[y * CHIP_8_SCREEN_WIDTH + x] * 255;
         }
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CHIP_8_SCREEN_WIDTH, CHIP_8_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid *) pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, CHIP_8_SCREEN_WIDTH, CHIP_8_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE,
+                 (GLvoid *) pixels);
 
     // Update GLFW
-    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+    glClearColor(.0f, .0f, .0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(shaderProgram);
 
@@ -217,48 +226,48 @@ void drawGraphics() {
     myChip8.drawFlag = false;
 }
 
-void key_event(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void key_event(GLFWwindow *window, int key, int scancode, int action, int mods) {
     // PRESS
-    if(key == GLFW_KEY_1 && action == GLFW_PRESS) myChip8.key[0x1] = 1;
-    else if(key == GLFW_KEY_2 && action == GLFW_PRESS) myChip8.key[0x2] = 1;
-    else if(key == GLFW_KEY_3 && action == GLFW_PRESS) myChip8.key[0x3] = 1;
-    else if(key == GLFW_KEY_4 && action == GLFW_PRESS) myChip8.key[0xC] = 1;
+    if (key == GLFW_KEY_1 && action == GLFW_PRESS) myChip8.key[0x1] = 1;
+    else if (key == GLFW_KEY_2 && action == GLFW_PRESS) myChip8.key[0x2] = 1;
+    else if (key == GLFW_KEY_3 && action == GLFW_PRESS) myChip8.key[0x3] = 1;
+    else if (key == GLFW_KEY_4 && action == GLFW_PRESS) myChip8.key[0xC] = 1;
 
-    else if(key == GLFW_KEY_Q && action == GLFW_PRESS) myChip8.key[0x4] = 1;
-    else if(key == GLFW_KEY_W && action == GLFW_PRESS) myChip8.key[0x5] = 1;
-    else if(key == GLFW_KEY_E && action == GLFW_PRESS) myChip8.key[0x6] = 1;
-    else if(key == GLFW_KEY_R && action == GLFW_PRESS) myChip8.key[0xD] = 1;
+    else if (key == GLFW_KEY_Q && action == GLFW_PRESS) myChip8.key[0x4] = 1;
+    else if (key == GLFW_KEY_W && action == GLFW_PRESS) myChip8.key[0x5] = 1;
+    else if (key == GLFW_KEY_E && action == GLFW_PRESS) myChip8.key[0x6] = 1;
+    else if (key == GLFW_KEY_R && action == GLFW_PRESS) myChip8.key[0xD] = 1;
 
-    else if(key == GLFW_KEY_A && action == GLFW_PRESS) myChip8.key[0x7] = 1;
-    else if(key == GLFW_KEY_S && action == GLFW_PRESS) myChip8.key[0x8] = 1;
-    else if(key == GLFW_KEY_D && action == GLFW_PRESS) myChip8.key[0x9] = 1;
-    else if(key == GLFW_KEY_F && action == GLFW_PRESS) myChip8.key[0xE] = 1;
+    else if (key == GLFW_KEY_A && action == GLFW_PRESS) myChip8.key[0x7] = 1;
+    else if (key == GLFW_KEY_S && action == GLFW_PRESS) myChip8.key[0x8] = 1;
+    else if (key == GLFW_KEY_D && action == GLFW_PRESS) myChip8.key[0x9] = 1;
+    else if (key == GLFW_KEY_F && action == GLFW_PRESS) myChip8.key[0xE] = 1;
 
-    else if(key == GLFW_KEY_Z && action == GLFW_PRESS) myChip8.key[0xA] = 1;
-    else if(key == GLFW_KEY_X && action == GLFW_PRESS) myChip8.key[0x0] = 1;
-    else if(key == GLFW_KEY_C && action == GLFW_PRESS) myChip8.key[0xB] = 1;
-    else if(key == GLFW_KEY_V && action == GLFW_PRESS) myChip8.key[0xF] = 1;
+    else if (key == GLFW_KEY_Z && action == GLFW_PRESS) myChip8.key[0xA] = 1;
+    else if (key == GLFW_KEY_X && action == GLFW_PRESS) myChip8.key[0x0] = 1;
+    else if (key == GLFW_KEY_C && action == GLFW_PRESS) myChip8.key[0xB] = 1;
+    else if (key == GLFW_KEY_V && action == GLFW_PRESS) myChip8.key[0xF] = 1;
 
-    // RELEASE
-    else if(key == GLFW_KEY_1 && action == GLFW_RELEASE) myChip8.key[0x1] = 0;
-    else if(key == GLFW_KEY_2 && action == GLFW_RELEASE) myChip8.key[0x2] = 0;
-    else if(key == GLFW_KEY_3 && action == GLFW_RELEASE) myChip8.key[0x3] = 0;
-    else if(key == GLFW_KEY_4 && action == GLFW_RELEASE) myChip8.key[0xC] = 0;
+        // RELEASE
+    else if (key == GLFW_KEY_1 && action == GLFW_RELEASE) myChip8.key[0x1] = 0;
+    else if (key == GLFW_KEY_2 && action == GLFW_RELEASE) myChip8.key[0x2] = 0;
+    else if (key == GLFW_KEY_3 && action == GLFW_RELEASE) myChip8.key[0x3] = 0;
+    else if (key == GLFW_KEY_4 && action == GLFW_RELEASE) myChip8.key[0xC] = 0;
 
-    else if(key == GLFW_KEY_Q && action == GLFW_RELEASE) myChip8.key[0x4] = 0;
-    else if(key == GLFW_KEY_W && action == GLFW_RELEASE) myChip8.key[0x5] = 0;
-    else if(key == GLFW_KEY_E && action == GLFW_RELEASE) myChip8.key[0x6] = 0;
-    else if(key == GLFW_KEY_R && action == GLFW_RELEASE) myChip8.key[0xD] = 0;
+    else if (key == GLFW_KEY_Q && action == GLFW_RELEASE) myChip8.key[0x4] = 0;
+    else if (key == GLFW_KEY_W && action == GLFW_RELEASE) myChip8.key[0x5] = 0;
+    else if (key == GLFW_KEY_E && action == GLFW_RELEASE) myChip8.key[0x6] = 0;
+    else if (key == GLFW_KEY_R && action == GLFW_RELEASE) myChip8.key[0xD] = 0;
 
-    else if(key == GLFW_KEY_A && action == GLFW_RELEASE) myChip8.key[0x7] = 0;
-    else if(key == GLFW_KEY_S && action == GLFW_RELEASE) myChip8.key[0x8] = 0;
-    else if(key == GLFW_KEY_D && action == GLFW_RELEASE) myChip8.key[0x9] = 0;
-    else if(key == GLFW_KEY_F && action == GLFW_RELEASE) myChip8.key[0xE] = 0;
+    else if (key == GLFW_KEY_A && action == GLFW_RELEASE) myChip8.key[0x7] = 0;
+    else if (key == GLFW_KEY_S && action == GLFW_RELEASE) myChip8.key[0x8] = 0;
+    else if (key == GLFW_KEY_D && action == GLFW_RELEASE) myChip8.key[0x9] = 0;
+    else if (key == GLFW_KEY_F && action == GLFW_RELEASE) myChip8.key[0xE] = 0;
 
-    else if(key == GLFW_KEY_Z && action == GLFW_RELEASE) myChip8.key[0xA] = 0;
-    else if(key == GLFW_KEY_X && action == GLFW_RELEASE) myChip8.key[0x0] = 0;
-    else if(key == GLFW_KEY_C && action == GLFW_RELEASE) myChip8.key[0xB] = 0;
-    else if(key == GLFW_KEY_V && action == GLFW_RELEASE) myChip8.key[0xF] = 0;
+    else if (key == GLFW_KEY_Z && action == GLFW_RELEASE) myChip8.key[0xA] = 0;
+    else if (key == GLFW_KEY_X && action == GLFW_RELEASE) myChip8.key[0x0] = 0;
+    else if (key == GLFW_KEY_C && action == GLFW_RELEASE) myChip8.key[0xB] = 0;
+    else if (key == GLFW_KEY_V && action == GLFW_RELEASE) myChip8.key[0xF] = 0;
 }
 
 void setupInput() {
